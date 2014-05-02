@@ -2,30 +2,245 @@
     ViewBag.Title = "Home Page";
 }
 
-<div class="jumbotron">
-    <h1>ASP.NET</h1>
-    <p class="lead">ASP.NET is a free web framework for building great Web sites and Web applications using HTML, CSS and JavaScript.</p>
-    <p><a href="http://asp.net" class="btn btn-primary btn-large">Learn more &raquo;</a></p>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+<link rel="stylesheet" href="css/site.css" type="text/css" media="screen" />
+<title>Conway's Game of Life</title>
+
+
+<div id="container">
+    <div id="header">
+        <h1>Conway's Game of Life</h1>
+    </div>
+    <div id="left-content">
+        <h2>Game</h2>
+        <p>Generation counter: <span id="counter">0</span></p>
+        <canvas id="grid" width="577" height="321"></canvas>
+    </div>
+    <div id="right-content">
+        <h2>Controls</h2>
+        <a id="controlLink" href="javascript:void(0)">Start/Stop</a><br />
+        <a id="clearLink" href="javascript:void(0)">Clear Grid</a>
+        <select id="minimumSelect" disabled="disabled" onclick="return minimumSelect_onclick()"></select><br />
+        <select id="maximumSelect" disabled="disabled"></select><br />
+        <select id="spawnSelect" disabled="disabled"></select><br />
+        <p>
+        </p>
+    </div>
 </div>
 
-<div class="row">
-    <div class="col-md-4">
-        <h2>Getting started</h2>
-        <p>
-            ASP.NET MVC gives you a powerful, patterns-based way to build dynamic websites that
-            enables a clean separation of concerns and gives you full control over markup
-            for enjoyable, agile development.
-        </p>
-        <p><a class="btn btn-default" href="http://go.microsoft.com/fwlink/?LinkId=301865">Learn more &raquo;</a></p>
-    </div>
-    <div class="col-md-4">
-        <h2>Get more libraries</h2>
-        <p>NuGet is a free Visual Studio extension that makes it easy to add, remove, and update libraries and tools in Visual Studio projects.</p>
-        <p><a class="btn btn-default" href="http://go.microsoft.com/fwlink/?LinkId=301866">Learn more &raquo;</a></p>
-    </div>
-    <div class="col-md-4">
-        <h2>Web Hosting</h2>
-        <p>You can easily find a web hosting company that offers the right mix of features and price for your applications.</p>
-        <p><a class="btn btn-default" href="http://go.microsoft.com/fwlink/?LinkId=301867">Learn more &raquo;</a></p>
-    </div>
-</div>
+
+
+
+<script type="text/javascript">
+    $(document).ready(
+                   function () {
+                       Array.matrix = function (m, n, initial) {
+                           var a, i, j, mat = [];
+                           for (i = 0; i < m; i += 1) {
+                               a = [];
+                               for (j = 0; j < n; j += 1) {
+                                   a[j] = 0;
+                               }
+                               mat[i] = a;
+                           }
+                           return mat;
+                       };
+                       var Life = {};
+                       Life.CELL_SIZE = 8;
+                       Life.X = 576;
+                       Life.Y = 320;
+                       Life.WIDTH = Life.X / Life.CELL_SIZE;
+                       Life.HEIGHT = Life.Y / Life.CELL_SIZE;
+                       Life.DEAD = 0;
+                       Life.ALIVE = 1;
+                       Life.DELAY = 100;
+                       Life.STOPPED = 0;
+                       Life.RUNNING = 1;
+                       Life.minimum = 2;
+                       Life.maximum = 3;
+                       Life.spawn = 3;
+                       Life.state = Life.STOPPED;
+                       Life.interval = null;
+                       Life.grid = Array.matrix(Life.HEIGHT, Life.WIDTH, 0);
+                       Life.counter = 0;
+                       Life.updateState = function () {
+                           var neighbours;
+                           var nextGenerationGrid = Array.matrix(Life.HEIGHT, Life.WIDTH, 0);
+                           for (var h = 0; h < Life.HEIGHT; h++) {
+                               for (var w = 0; w < Life.WIDTH; w++) {
+                                   neighbours = Life.calculateNeighbours(h, w);
+                                   if (Life.grid[h][w] !== Life.DEAD) {
+                                       if ((neighbours >= Life.minimum) && (neighbours <= Life.maximum)) {
+                                           nextGenerationGrid[h][w] = Life.ALIVE;
+                                       }
+                                   } else {
+                                       if (neighbours === Life.spawn) {
+                                           nextGenerationGrid[h][w] = Life.ALIVE;
+                                       }
+                                   }
+                               }
+                           }
+                           Life.copyGrid(nextGenerationGrid, Life.grid);
+                           Life.counter++;
+                       };
+                       Life.calculateNeighbours = function (y, x) {
+                           var total = (Life.grid[y][x] !== Life.DEAD) ? -1 : 0;
+                           for (var h = -1; h <= 1; h++) {
+                               for (var w = -1; w <= 1; w++) {
+                                   if (Life.grid[(Life.HEIGHT + (y + h)) % Life.HEIGHT][(Life.WIDTH + (x + w)) % Life.WIDTH] !== Life.DEAD) {
+                                       total++;
+                                   }
+                               }
+                           }
+                           return total;
+                       };
+                       Life.copyGrid = function (source, destination) {
+                           for (var h = 0; h < Life.HEIGHT; h++) {
+                               /*
+                               for (var w = 0; w < Life.WIDTH; w++) {
+                               destination[h][w] = source[h][w];
+                               }
+                               */
+                               destination[h] = source[h].slice(0);
+                           }
+                       };
+                       function Cell(row, column) {
+                           this.row = row;
+                           this.column = column;
+                       };
+                       var gridCanvas = document.getElementById('grid');
+                       var counterSpan = document.getElementById("counter");
+                       var controlLink = document.getElementById("controlLink");
+                       var clearLink = document.getElementById("clearLink");
+                       var minimumSelect = document.getElementById("minimumSelect");
+                       var maximumSelect = document.getElementById("maximumSelect");
+                       var spawnSelect = document.getElementById("spawnSelect");
+                       controlLink.onclick = function () {
+                           switch (Life.state) {
+                               case Life.STOPPED:
+                                   Life.interval = setInterval(function () {
+                                       update();
+                                   }, Life.DELAY);
+                                   Life.state = Life.RUNNING;
+                                   break;
+                               default:
+                                   clearInterval(Life.interval);
+                                   Life.state = Life.STOPPED;
+                           }
+                       };
+                       clearLink.onclick = function () {
+                           Life.grid = Array.matrix(Life.HEIGHT, Life.WIDTH, 0);
+                           Life.counter = 0;
+                           clearInterval(Life.interval);
+                           Life.state = Life.STOPPED;
+                           updateAnimations();
+                       }
+                       minimumSelect.onchange = function () {
+                           clearInterval(Life.interval);
+                           Life.state = Life.STOPPED;
+                           Life.minimum = minimumSelect.value;
+                           updateAnimations();
+                       }
+                       maximumSelect.onchange = function () {
+                           clearInterval(Life.interval);
+                           Life.state = Life.STOPPED;
+                           Life.maximum = maximumSelect.value;
+                           updateAnimations();
+                       }
+                       spawnSelect.onchange = function () {
+                           clearInterval(Life.interval);
+                           Life.state = Life.STOPPED;
+                           Life.spawn = spawnSelect.value;
+                           updateAnimations();
+                       }
+                       function update() {
+                           Life.updateState();
+                           //updateInput();
+                           //updateAI();
+                           //updatePhysics();
+                           updateAnimations();
+                           //updateSound();
+                           //updateVideo();
+                       };
+                       function updateAnimations() {
+                           for (var h = 0; h < Life.HEIGHT; h++) {
+                               for (var w = 0; w < Life.WIDTH; w++) {
+                                   if (Life.grid[h][w] === Life.ALIVE) {
+                                       context.fillStyle = "#000";
+                                   } else {
+                                       context.fillStyle = "#FFFFFF";
+                                       //context.clearRect();
+                                   }
+                                   context.fillRect(
+                                                                             w * Life.CELL_SIZE + 1,
+                                                                             h * Life.CELL_SIZE + 1,
+                                                                             Life.CELL_SIZE - 1,
+                                                                             Life.CELL_SIZE - 1);
+                               }
+                           }
+                           counterSpan.innerHTML = Life.counter;
+                       };
+                       if (gridCanvas.getContext) {
+                           var context = gridCanvas.getContext('2d');
+                           var offset = Life.CELL_SIZE;
+                           for (var x = 0; x <= Life.X; x += Life.CELL_SIZE) {
+                               context.moveTo(0.5 + x, 0);
+                               context.lineTo(0.5 + x, Life.Y);
+                           }
+                           for (var y = 0; y <= Life.Y; y += Life.CELL_SIZE) {
+                               context.moveTo(0, 0.5 + y);
+                               context.lineTo(Life.X, 0.5 + y);
+                           }
+                           context.strokeStyle = "#254117";
+                           context.stroke();
+                           function canvasOnClickHandler(event) {
+                               var cell = getCursorPosition(event);
+                               var state = Life.grid[cell.row][cell.column] == Life.ALIVE ? Life.DEAD : Life.ALIVE;
+                               Life.grid[cell.row][cell.column] = state;
+                               updateAnimations();
+                           };
+                           function getCursorPosition(event) {
+                               var x;
+                               var y;
+                               if (event.pageX || event.pageY) {
+                                   x = event.pageX;
+                                   y = event.pageY;
+                               } else {
+                                   x = event.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
+                                   y = event.clientY + document.body.scrollTop + document.documentElement.scrollTop;
+                               }
+                               x -= gridCanvas.offsetLeft;
+                               y -= gridCanvas.offsetTop;
+                               var cell = new Cell(Math.floor((y - 4) / Life.CELL_SIZE), Math.floor((x - 2) / Life.CELL_SIZE));
+                               return cell;
+                           };
+                           gridCanvas.addEventListener("click", canvasOnClickHandler, false);
+                       } else {
+                           alert("Canvas is unsupported in your browser.");
+                       }
+                   }
+          );
+    function minimumSelect_onclick() {
+
+    }
+</script>
+<script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-2662092-4']);
+    _gaq.push(['_trackPageview']);
+    (function () {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })()
+</script>
+<script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-2662092-4']);
+    _gaq.push(['_trackPageview']);
+    (function () {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+</script> 
