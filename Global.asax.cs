@@ -15,6 +15,9 @@ namespace WebLife
             AreaRegistration.RegisterAllAreas();
             FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
             RouteConfig.RegisterRoutes(RouteTable.Routes);
+            var coffeBundle = new DynamicFolderBundle("coffee", "*.coffee", new CoffeeCompiler());
+            BundleTable.Bundles.Add(coffeBundle);
+
             BundleConfig.RegisterBundles(BundleTable.Bundles);
         }
     }

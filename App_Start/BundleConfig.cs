@@ -26,6 +26,12 @@ namespace WebLife
             bundles.Add(new StyleBundle("~/Content/css").Include(
                       "~/Content/bootstrap.css",
                       "~/Content/site.css"));
+
+            Bundle coffeeBundle = new ScriptBundle("~/bundles/coffee").Include(
+                "~/Scripts/CoffeeScripts/TestingCoffee.coffee");
+            coffeeBundle.Transforms.Insert(0,new CoffeeCompiler());
+            bundles.Add(coffeeBundle);
+                    
         }
     }
 }

@@ -53,3 +53,6 @@ c:\users\pavlik\documents\visual studio 2013\Projects\WebLife\WebLife\bin\Micros
 c:\users\pavlik\documents\visual studio 2013\Projects\WebLife\WebLife\obj\Debug\WebLife.csprojResolveAssemblyReference.cache
 c:\users\pavlik\documents\visual studio 2013\Projects\WebLife\WebLife\obj\Debug\WebLife.dll
 c:\users\pavlik\documents\visual studio 2013\Projects\WebLife\WebLife\obj\Debug\WebLife.pdb
+c:\users\pavlik\documents\visual studio 2013\Projects\WebLife\WebLife\bin\CoffeeScriptHttpHandler.dll
+c:\users\pavlik\documents\visual studio 2013\Projects\WebLife\WebLife\bin\CoffeeSharp.dll
+c:\users\pavlik\documents\visual studio 2013\Projects\WebLife\WebLife\bin\Jurassic.dll
